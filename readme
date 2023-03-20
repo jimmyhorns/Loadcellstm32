@@ -1,0 +1,22 @@
+This project uses an I2C load cell to provide the data source of load on a brake pedal for sim racing.
+
+The code outputs a PWM signal that is able to drive an op-amp to provide an analogue signal to a logitech G29 racing wheel as if it was the real pedal.
+
+The original pedal uses a spring to provide resistance to pedal movement and a simple logrhymic potentiometer to act as a voltage divider. 
+The reference voltage is 0v - 3.3v 
+3.3V is no brake  = 100%
+0.7v is full brake  = 21%
+
+The loadcell's I2C output varies from 1000 (no load) to 15000 (50kg load). The value therefore needs to be offset by 1000 to give a true value.
+This will vary between 0 and 14000.
+
+This needs to be inverted (i.e. 0 becomes 14000 and 14000 becomes 0) y = 14000 - x 
+
+to scale to the available output pwm (21 to 100% duty cycle) this means a scale of 14000/0.79 = 17722
+0 scales to 3722
+14000 scales to 17722
+
+so z = y + 3722     Where z is the duty cycle and y is the inverted and corrected loadcell value.
+
+The stm32f401 takes a 16bit integer for the PWM duty cycle, so 3722 to 17722 will be fine. These can be accessed directly by the CCR1 register.
+
